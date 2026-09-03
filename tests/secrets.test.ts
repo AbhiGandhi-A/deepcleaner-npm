@@ -51,7 +51,6 @@ describe('Secrets Scanner & Redaction', () => {
     expect(result.findings.length).toBeGreaterThan(0);
     const ids = result.findings.map((f) => f.id);
     expect(ids).toContain('DC-SECRET-001'); // AWS Key
-    expect(ids).toContain('DC-SECRET-008'); // Slack Bot Token
+    expect(ids).toContain('DC-SECRET-014'); // Database URI Password
   });
 });
-

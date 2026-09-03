@@ -9,9 +9,6 @@ export interface CommandResult {
   exitCode: number;
 }
 
-/**
- * Safely executes a binary without shell injection risks
- */
 export async function runCommandSafe(
   binary: string,
   args: string[],
@@ -46,9 +43,6 @@ export async function runCommandSafe(
   }
 }
 
-/**
- * Checks if an executable exists on the system PATH
- */
 export async function isExecutableAvailable(binaryName: string): Promise<boolean> {
   const isWindows = process.platform === 'win32';
   const checker = isWindows ? 'where' : 'which';
