@@ -1,7 +1,9 @@
 import { createCliProgram, parseCliOptions } from './arguments.js';
 import { executeScan, executeDoctor } from './commands.js';
+import { loadEnv } from '../utils/env.js';
 
 export async function runCli(argv: string[] = process.argv): Promise<void> {
+  loadEnv();
   const program = createCliProgram();
   const { command, target, options } = parseCliOptions(program, argv);
 

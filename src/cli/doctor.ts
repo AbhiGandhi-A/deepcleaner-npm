@@ -2,6 +2,7 @@ import pc from 'picocolors';
 import { detectDockerRuntime } from '../sandbox/detector.js';
 import { isExecutableAvailable } from '../utils/process.js';
 import { GroqClient } from '../ai/groq.js';
+import { testMongoConnection } from '../storage/mongodb.js';
 
 export interface DoctorCheck {
   category: string;
@@ -153,6 +154,24 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
       name: 'Groq AI Advisor',
       status: 'optional_missing',
       message: 'Not configured (Set GROQ_API_KEY in environment or .env for --ai advisory)'
+    });
+  }
+
+  // 6. MongoDB Database Storage
+  const mongoCheck = await testMongoConnection();
+  if (mongoCheck.connected) {
+    checks.push({
+      category: 'Database & Storage',
+      name: 'MongoDB Database Storage',
+      status: 'ok',
+      message: 'Connected (DeepCleaner scan repository active)'
+    });
+  } else {
+    checks.push({
+      category: 'Database & Storage',
+      name: 'MongoDB Database Storage',
+      status: 'optional_missing',
+      message: process.env.MONGODB_URI ? `Configured but unreachable: ${mongoCheck.message}` : 'Not configured (Set MONGODB_URI to auto-save scan records)'
     });
   }
 

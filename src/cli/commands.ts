@@ -12,6 +12,7 @@ import { renderSarifReport } from '../reports/sarif.js';
 import { isSeverityAtLeast } from '../scoring/severity.js';
 import { createBaseline, applyBaseline } from '../utils/baseline.js';
 import { runDoctor, renderDoctorReport } from './doctor.js';
+import { saveScanResultToMongo } from '../storage/mongodb.js';
 
 export function loadUserConfig(targetDir: string): UserConfig {
   const configNames = ['.deepcleanerrc.json', '.deepcleanerrc', '.deepcleaner.json'];
@@ -95,6 +96,19 @@ export async function executeScan(target: string, options: CliOptions): Promise<
     } catch (err: any) {
       console.error(pc.red(`Failed to load baseline file: ${err?.message || err}`));
       return 2;
+    }
+  }
+
+  // Handle MongoDB Storage Push
+  if (options.mongodb || process.env.MONGODB_URI) {
+    const customUri = typeof options.mongodb === 'string' ? options.mongodb : undefined;
+    const mongoRes = await saveScanResultToMongo(scanResult, customUri);
+    if (!options.json && !options.quiet) {
+      if (mongoRes.success) {
+        console.log(pc.green(`✓ Scan report pushed to MongoDB collection '${mongoRes.collection}' (id: ${mongoRes.insertedId})`));
+      } else if (options.mongodb) {
+        console.log(pc.yellow(`○ MongoDB push skipped/failed: ${mongoRes.error}`));
+      }
     }
   }
 

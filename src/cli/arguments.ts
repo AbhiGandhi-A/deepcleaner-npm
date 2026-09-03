@@ -33,6 +33,7 @@ export function createCliProgram(): Command {
     .option('--json', 'Output scan results strictly as JSON to stdout')
     .option('--html [file]', 'Generate standalone offline HTML report (default: deepcleaner-report.html)')
     .option('--sarif [file]', 'Generate SARIF v2.1.0 output for GitHub Code Scanning / CI')
+    .option('--mongodb [uri]', 'Push scan results directly to MongoDB database')
     .option('--ci', 'Run in CI mode with exit code control based on severity')
     .option('--fail-on <severity>', 'Fail CI if findings meet or exceed severity (critical|high|medium|low)')
     .option('--fix', 'Suggest safe deterministic remediations interactively')
@@ -94,7 +95,8 @@ export function parseCliOptions(program: Command, argv: string[] = process.argv)
     outputFile: mergedOpts.output,
     baseline: mergedOpts.baseline,
     baselineCreate: mergedOpts.baselineCreate,
-    ignore: ignoreList.length > 0 ? ignoreList : undefined
+    ignore: ignoreList.length > 0 ? ignoreList : undefined,
+    mongodb: mergedOpts.mongodb
   };
 
   return { command: 'scan', target, options };

@@ -41,6 +41,7 @@ export interface CliOptions {
   maxFileSize?: number;
   baseline?: string;
   baselineCreate?: string;
+  mongodb?: string | boolean;
 }
 
 export interface UserConfig {
