@@ -45,3 +45,4 @@ describe('MongoDB Storage Module', () => {
     expect(check.connected).toBe(false);
   });
 });
+
