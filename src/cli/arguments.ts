@@ -7,7 +7,6 @@ export function createCliProgram(): Command {
   program
     .name('deepcleaner')
     .description('Deep local security and malware-indicator scanner for software projects')
-    .version('1.0.5', '-v, --version', 'Output DeepCleaner version')
     .version('1.0.6', '-v, --version', 'Output DeepCleaner version')
     .usage('[options] [target]')
     .option('--deep', 'Perform deep recursive scanning including Git commit history')
