@@ -2,6 +2,12 @@
 
 All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in this file.
 
+## [1.0.5] - 2026-09-04
+
+### Fixed
+- **Database Connection Safety**: Prevented `MongoParseError` when scanning projects containing generic or non-MongoDB `DATABASE_URL` (such as PostgreSQL/MySQL).
+- **Storage Diagnostics**: Enhanced `doctor` and MongoDB persistence layer with strict URI scheme validation.
+
 ## [1.0.4] - 2026-09-04
 
 ### Improved
