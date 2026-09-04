@@ -58,3 +58,35 @@ export function adjustConfidence(
 
   return Math.max(0, Math.min(100, conf));
 }
+
+export function classifyFinding(finding: {
+  category: string;
+  confidence: number;
+  id?: string;
+  evidenceChain?: string[];
+  behaviorCategories?: string[];
+  metadata?: Record<string, unknown>;
+}): import('../models/finding.js').FindingClassification {
+  const isMalware = finding.category === 'Malware' || finding.category === 'Malware Indicator';
+  const hasChain = (finding.evidenceChain && finding.evidenceChain.length >= 2) ||
+                   (finding.behaviorCategories && finding.behaviorCategories.length >= 2);
+  const isSignatureOrHash = finding.id?.includes('MAL-001') || finding.metadata?.threatIntelMatch;
+
+  if (isSignatureOrHash || (isMalware && hasChain && finding.confidence >= 95)) {
+    return 'confirmed_malware';
+  }
+
+  if ((isMalware || finding.category === 'Suspicious') && (hasChain || finding.confidence >= 80)) {
+    return 'potentially_malicious';
+  }
+
+  if (finding.confidence >= 60 || isMalware || finding.category === 'Suspicious') {
+    return 'suspicious';
+  }
+
+  if (finding.confidence >= 20) {
+    return 'needs_review';
+  }
+
+  return 'clean';
+}

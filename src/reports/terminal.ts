@@ -50,8 +50,37 @@ export function renderTerminalReport(result: ScanResult, verbose = false): strin
   lines.push('');
 
   lines.push(pc.cyan('─────────────────────────────────────────────────────────────'));
-  lines.push(pc.bold('SECURITY RESULT'));
+  lines.push(pc.bold('SECURITY RESULT & CLASSIFICATION SUMMARY'));
   lines.push('');
+
+  const m = result.metrics;
+  const cls = result.classifications;
+
+  if (m) {
+    lines.push(
+      `  Files scanned: ${pc.bold(m.filesScanned.toString())} | Hidden files: ${pc.bold(m.hiddenFilesScanned.toString())} | ` +
+      `Archives: ${pc.bold(m.archivesInspected.toString())} | Binaries: ${pc.bold(m.binariesInspected.toString())}`
+    );
+    lines.push(
+      `  Secrets detected: ${pc.bold(m.secretsDetected.toString())} | Dependencies analyzed: ${pc.bold(m.dependenciesAnalyzed.toString())}`
+    );
+    lines.push('');
+  }
+
+  if (cls) {
+    let malStyle = cls.confirmedMalware > 0 ? pc.bgRed(pc.white(pc.bold(` ${cls.confirmedMalware} `))) : pc.green('0');
+    let potStyle = cls.potentiallyMalicious > 0 ? pc.red(pc.bold(cls.potentiallyMalicious.toString())) : pc.dim('0');
+    let suspStyle = cls.suspicious > 0 ? pc.yellow(pc.bold(cls.suspicious.toString())) : pc.dim('0');
+    let revStyle = cls.needsReview > 0 ? pc.blue(pc.bold(cls.needsReview.toString())) : pc.dim('0');
+
+    lines.push(
+      `  Confirmed Malware: ${malStyle}   ` +
+      `  Potentially Malicious: ${potStyle}   ` +
+      `  Suspicious: ${suspStyle}   ` +
+      `  Needs Review: ${revStyle}`
+    );
+    lines.push('');
+  }
 
   let scoreColor = pc.green;
   if (result.riskScore.score > 70) scoreColor = pc.red;

@@ -51,6 +51,73 @@ export class DependencyScanner implements IScanner {
               }
             }
           }
+
+          // Inspect lifecycle scripts
+          if (content.scripts) {
+            const riskyHooks = ['preinstall', 'install', 'postinstall'];
+            for (const hook of riskyHooks) {
+              const scriptCmd = content.scripts[hook];
+              if (typeof scriptCmd === 'string') {
+                if (/(?:curl|wget).*\|\s*(?:ba)?sh|node\s+-e\s+["'].*(?:Buffer|fetch|http|exec)/i.test(scriptCmd)) {
+                  findings.push({
+                    id: 'DC-DEP-002',
+                    scanner: this.id,
+                    category: 'Malware Indicator',
+                    severity: 'CRITICAL',
+                    confidence: 95,
+                    classification: 'potentially_malicious',
+                    title: `Suspicious remote download in ${hook} lifecycle script`,
+                    description: `The '${hook}' script in '${file.relativePath}' executes remote downloads or obfuscated code upon installation.`,
+                    file: file.relativePath,
+                    evidence: `"${hook}": "${scriptCmd}"`,
+                    redactedEvidence: `"${hook}": "${scriptCmd}"`,
+                    detectionMethod: 'Package Lifecycle Script Static Analysis',
+                    whyItIsSuspicious: 'Package install hook executes remote shell or dynamic eval during npm install.',
+                    remediation: 'Inspect package script to ensure it does not execute unauthorized payloads.',
+                    cwe: ['CWE-506']
+                  });
+                }
+              }
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (base === 'yarn.lock') {
+        filesScanned++;
+        try {
+          const lines = fs.readFileSync(file.path, 'utf-8').split(/\r?\n/);
+          let currentName = '';
+          for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('"') || trimmed.endsWith(':')) {
+              const match = trimmed.match(/^"?(@?[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)?)@/);
+              if (match) currentName = match[1];
+            } else if (trimmed.startsWith('version:') || trimmed.startsWith('version ')) {
+              const verMatch = trimmed.match(/version:?\s*"?([0-9a-zA-Z_.-]+)"?/);
+              if (verMatch && currentName) {
+                parsedDeps.push({ name: currentName, version: verMatch[1], ecosystem: 'npm', manifestFile: file.relativePath });
+                currentName = '';
+              }
+            }
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      if (base === 'pnpm-lock.yaml') {
+        filesScanned++;
+        try {
+          const lines = fs.readFileSync(file.path, 'utf-8').split(/\r?\n/);
+          for (const line of lines) {
+            const match = line.match(/^\s*['"]?\/(@?[a-zA-Z0-9_.-]+(?:\/[a-zA-Z0-9_.-]+)?)[@/]([0-9]+\.[0-9]+\.[0-9]+[^:'"]*)['"]?:/);
+            if (match) {
+              parsedDeps.push({ name: match[1], version: match[2], ecosystem: 'npm', manifestFile: file.relativePath });
+            }
+          }
         } catch {
           // ignore
         }

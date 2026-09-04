@@ -30,12 +30,20 @@ export interface TaintStep {
   codeSnippet?: string;
 }
 
+export type FindingClassification =
+  | 'clean'
+  | 'needs_review'
+  | 'suspicious'
+  | 'potentially_malicious'
+  | 'confirmed_malware';
+
 export interface Finding {
   id: string;
   scanner: string;
   category: FindingCategory;
   severity: Severity;
   confidence: number;
+  classification?: FindingClassification;
   title: string;
   description: string;
   file: string;
@@ -45,6 +53,10 @@ export interface Finding {
   endColumn?: number;
   evidence?: string;
   redactedEvidence?: string;
+  evidenceChain?: string[];
+  whyItIsSuspicious?: string;
+  detectionMethod?: string;
+  behaviorCategories?: string[];
   source?: string;
   remediation?: string;
   suggestedFix?: string;

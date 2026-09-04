@@ -38,6 +38,43 @@ export function calculateSummary(findings: Finding[]): SeveritySummary {
   };
 }
 
+export function calculateClassifications(findings: Finding[]): import('../models/scan-result.js').ClassificationSummary {
+  let confirmedMalware = 0;
+  let potentiallyMalicious = 0;
+  let suspicious = 0;
+  let needsReview = 0;
+  let clean = 0;
+
+  for (const f of findings) {
+    const cls = f.classification || 'needs_review';
+    switch (cls) {
+      case 'confirmed_malware':
+        confirmedMalware++;
+        break;
+      case 'potentially_malicious':
+        potentiallyMalicious++;
+        break;
+      case 'suspicious':
+        suspicious++;
+        break;
+      case 'needs_review':
+        needsReview++;
+        break;
+      case 'clean':
+        clean++;
+        break;
+    }
+  }
+
+  return {
+    confirmedMalware,
+    potentiallyMalicious,
+    suspicious,
+    needsReview,
+    clean
+  };
+}
+
 export function calculateRiskScore(findings: Finding[]): RiskScoreDetails {
   const seenKeys = new Set<string>();
   const deduplicated: Finding[] = [];

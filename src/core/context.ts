@@ -42,6 +42,10 @@ export interface CliOptions {
   baseline?: string;
   baselineCreate?: string;
   mongodb?: string | boolean;
+  noDeps?: boolean;
+  noGit?: boolean;
+  yara?: boolean;
+  clamav?: boolean;
 }
 
 export interface UserConfig {
@@ -135,6 +139,9 @@ export class ScanContext {
 
   isScannerEnabled(scannerId: string): boolean {
     const opts = this.options;
+    if (scannerId === 'dependencies' && opts.noDeps) return false;
+    if (scannerId === 'git' && opts.noGit) return false;
+
     const hasFocus = opts.security || opts.malware || opts.secrets || opts.deps || opts.config;
     if (opts.full) return true;
 

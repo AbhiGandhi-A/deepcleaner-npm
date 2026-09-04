@@ -156,13 +156,30 @@ export class ScanEngine {
 
     if (onProgress) onProgress(10, 10, 'Compiling report');
 
+    // Auto-classify findings based on confidence and behavioral evidence
+    const { classifyFinding } = await import('../scoring/confidence.js');
+    const { calculateClassifications } = await import('../scoring/risk-score.js');
+
+    for (const f of allFindings) {
+      if (!f.classification) {
+        f.classification = classifyFinding(f);
+      }
+    }
+
     const summary = calculateSummary(allFindings);
     const riskScore = calculateRiskScore(allFindings);
+    const classifications = calculateClassifications(allFindings);
+
+    const hiddenFilesCount = files.filter((f) => path.basename(f.relativePath).startsWith('.')).length;
+    const archivesInspected = files.filter((f) => f.isArchive).length;
+    const binariesInspected = files.filter((f) => f.isBinary || f.isExecutable).length;
+    const secretsDetected = allFindings.filter((f) => f.category === 'Secrets').length;
+    const dependenciesAnalyzed = files.filter((f) => ['package.json', 'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'requirements.txt', 'composer.lock', 'go.mod'].includes(path.basename(f.relativePath))).length;
 
     const scanResult: ScanResult = {
       tool: {
         name: 'deepcleaner-ag',
-        version: '1.0.0',
+        version: '1.0.2',
         homepage: 'https://github.com/AbhiGandhi-A/deepcleaner-npm#readme'
       },
       target: {
@@ -174,6 +191,16 @@ export class ScanEngine {
       project: ctx.projectMetadata,
       riskScore,
       summary,
+      classifications,
+      metrics: {
+        filesScanned: files.length,
+        filesSkipped: 0,
+        hiddenFilesScanned: hiddenFilesCount,
+        archivesInspected,
+        binariesInspected,
+        secretsDetected,
+        dependenciesAnalyzed
+      },
       scanners: scannerResults,
       findings: allFindings,
       disclaimers: STANDARD_DISCLAIMERS,

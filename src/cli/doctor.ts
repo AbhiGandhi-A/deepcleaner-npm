@@ -104,6 +104,23 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
     });
   }
 
+  const clamAvail = (await isExecutableAvailable('clamscan')) || (await isExecutableAvailable('clamdscan'));
+  if (clamAvail) {
+    checks.push({
+      category: 'Optional Integrations',
+      name: 'ClamAV Antivirus Engine',
+      status: 'ok',
+      message: 'Available (clamscan binary found)'
+    });
+  } else {
+    checks.push({
+      category: 'Optional Integrations',
+      name: 'ClamAV Antivirus Engine',
+      status: 'optional_missing',
+      message: 'Unavailable (clamscan not in PATH; static heuristics active)'
+    });
+  }
+
   // 4. OSV Connectivity
   try {
     const controller = new AbortController();

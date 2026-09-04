@@ -316,6 +316,76 @@ export function analyzeJavaScriptAst(options: AstAnalysisOptions): Finding[] {
         }
       }
     });
+
+    // Multi-step Behavioral Attack Chain Detection
+    const behaviorSteps: { type: string; line: number; desc: string }[] = [];
+
+    // 1. Scan for Credential / Secret File Access
+    const credPatterns = /(?:id_rsa|\.ssh|\.aws|\.env|\.npmrc|\/etc\/shadow|\/etc\/passwd|process\.env)/i;
+    if (credPatterns.test(code) && /(?:readFileSync|readFile|createReadStream|JSON\.stringify\(process\.env\))/i.test(code)) {
+      behaviorSteps.push({
+        type: 'credential_access',
+        line: 1,
+        desc: 'Accesses credential files or dumps process.env'
+      });
+    }
+
+    // 2. Scan for Data Encoding / Obfuscation Transform
+    if (/(?:toString\(['"]base64['"]\)|Buffer\.from\([^)]+['"]base64['"]\)|btoa\(|String\.fromCharCode)/i.test(code)) {
+      behaviorSteps.push({
+        type: 'encoding',
+        line: 1,
+        desc: 'Encodes data using Base64 or byte reconstruction'
+      });
+    }
+
+    // 3. Scan for External Network Exfiltration
+    if (/(?:fetch\s*\(|axios\.(?:post|put)|https?\.request|net\.connect|new\s+WebSocket|https?:\/\/[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)/i.test(code)) {
+      behaviorSteps.push({
+        type: 'network_exfiltration',
+        line: 1,
+        desc: 'Transmits data to external network address or remote server'
+      });
+    }
+
+    // 4. Scan for Payload Execution
+    if (/(?:child_process\.exec|execSync|spawnSync|eval\s*\(|new\s+Function)/i.test(code)) {
+      behaviorSteps.push({
+        type: 'execution',
+        line: 1,
+        desc: 'Dynamically executes shell commands or strings as code'
+      });
+    }
+
+    // Correlate: Credential Access + Network Exfiltration = Malicious Data Stealer Attack Chain
+    const hasCreds = behaviorSteps.some((s) => s.type === 'credential_access');
+    const hasNet = behaviorSteps.some((s) => s.type === 'network_exfiltration');
+    const hasExec = behaviorSteps.some((s) => s.type === 'execution');
+
+    if (hasCreds && hasNet) {
+      const chain = behaviorSteps.map((s, idx) => `${idx + 1}. ${s.desc}`);
+      findings.push({
+        id: 'DC-MAL-CHAIN-001',
+        scanner: 'sast',
+        category: 'Malware',
+        severity: 'CRITICAL',
+        confidence: hasExec ? 99 : 96,
+        classification: 'confirmed_malware',
+        title: 'Malicious Credential Theft and Network Exfiltration Attack Chain',
+        description: 'Multi-step behavioral attack chain detected: local credentials or environment secrets are accessed, transformed, and transmitted to a remote network destination.',
+        file: relativePath,
+        line: 1,
+        column: 1,
+        evidence: chain.join(' -> '),
+        redactedEvidence: chain.join(' -> '),
+        evidenceChain: chain,
+        whyItIsSuspicious: 'Correlated multi-stage attack flow: Credential harvesting combined with remote data transmission.',
+        detectionMethod: 'AST Behavioral Attack-Chain Correlation',
+        behaviorCategories: behaviorSteps.map((s) => s.type),
+        remediation: 'Quarantine file immediately and inspect all outbound network transmissions.',
+        cwe: ['CWE-200', 'CWE-506']
+      });
+    }
   } catch {
     // Graceful error recovery
   }

@@ -1,10 +1,10 @@
 {
   "name": "deepcleaner-ag",
-  "version": "1.0.0",
-  "description": "Deep local security, secret detection, dependency, and malware-indicator scanner for software projects",
+  "version": "1.0.2",
+  "description": "High-accuracy, multi-layer defensive security, SAST, secret detection, dependency, and malware-indicator scanner",
   "type": "module",
   "bin": {
-    "deepcleaner": "./bin/deepcleaner.js"
+    "deepcleaner": "bin/deepcleaner.js"
   },
   "main": "./dist/cli/index.js",
   "types": "./dist/cli/index.d.ts",

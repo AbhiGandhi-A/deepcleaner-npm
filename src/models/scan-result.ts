@@ -11,6 +11,24 @@ export interface SeveritySummary {
   total: number;
 }
 
+export interface ClassificationSummary {
+  confirmedMalware: number;
+  potentiallyMalicious: number;
+  suspicious: number;
+  needsReview: number;
+  clean: number;
+}
+
+export interface MetricsSummary {
+  filesScanned: number;
+  filesSkipped: number;
+  hiddenFilesScanned: number;
+  archivesInspected: number;
+  binariesInspected: number;
+  secretsDetected: number;
+  dependenciesAnalyzed: number;
+}
+
 export interface RiskScoreDetails {
   score: number;
   grade: 'A' | 'B' | 'C' | 'D' | 'F';
@@ -39,6 +57,8 @@ export interface ScanResult {
   project: ProjectMetadata;
   riskScore: RiskScoreDetails;
   summary: SeveritySummary;
+  classifications?: ClassificationSummary;
+  metrics?: MetricsSummary;
   scanners: Record<string, ScannerResult>;
   findings: Finding[];
   disclaimers: string[];

@@ -7,7 +7,7 @@ export function createCliProgram(): Command {
   program
     .name('deepcleaner')
     .description('Deep local security and malware-indicator scanner for software projects')
-    .version('1.0.0', '-v, --version', 'Output DeepCleaner version');
+    .version('1.0.2', '-v, --version', 'Output DeepCleaner version');
 
   // Doctor command
   program
@@ -26,6 +26,10 @@ export function createCliProgram(): Command {
     .option('--malware', 'Focus on malware indicators and suspicious code')
     .option('--secrets', 'Focus on exposed API keys, private certificates, and secrets')
     .option('--deps', 'Focus on dependency vulnerabilities (OSV)')
+    .option('--no-deps', 'Disable dependency scanning')
+    .option('--no-git', 'Disable Git history scanning')
+    .option('--yara', 'Enable YARA signature scanning')
+    .option('--clamav', 'Enable ClamAV antivirus scanning')
     .option('--config', 'Focus on Docker, Kubernetes, and CI/CD configuration security')
     .option('--ai', 'Enable advisory AI finding analysis with Groq (requires GROQ_API_KEY)')
     .option('--full', 'Enable all security scanners, AI analysis, and deep checks')
@@ -96,7 +100,11 @@ export function parseCliOptions(program: Command, argv: string[] = process.argv)
     baseline: mergedOpts.baseline,
     baselineCreate: mergedOpts.baselineCreate,
     ignore: ignoreList.length > 0 ? ignoreList : undefined,
-    mongodb: mergedOpts.mongodb
+    mongodb: mergedOpts.mongodb,
+    noDeps: Boolean(mergedOpts.deps === false || mergedOpts.noDeps),
+    noGit: Boolean(mergedOpts.git === false || mergedOpts.noGit),
+    yara: Boolean(mergedOpts.yara),
+    clamav: Boolean(mergedOpts.clamav)
   };
 
   return { command: 'scan', target, options };
