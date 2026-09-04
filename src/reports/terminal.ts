@@ -55,6 +55,7 @@ export function renderTerminalReport(result: ScanResult, verbose = false): strin
 
   const m = result.metrics;
   const cls = result.classifications;
+  const sec = result.securityFindings;
 
   if (m) {
     lines.push(
@@ -68,6 +69,7 @@ export function renderTerminalReport(result: ScanResult, verbose = false): strin
   }
 
   if (cls) {
+    lines.push(pc.bold('MALWARE ANALYSIS'));
     let malStyle = cls.confirmedMalware > 0 ? pc.bgRed(pc.white(pc.bold(` ${cls.confirmedMalware} `))) : pc.green('0');
     let potStyle = cls.potentiallyMalicious > 0 ? pc.red(pc.bold(cls.potentiallyMalicious.toString())) : pc.dim('0');
     let suspStyle = cls.suspicious > 0 ? pc.yellow(pc.bold(cls.suspicious.toString())) : pc.dim('0');
@@ -76,9 +78,29 @@ export function renderTerminalReport(result: ScanResult, verbose = false): strin
     lines.push(
       `  Confirmed Malware: ${malStyle}   ` +
       `  Potentially Malicious: ${potStyle}   ` +
-      `  Suspicious: ${suspStyle}   ` +
+      `  Suspicious Indicators: ${suspStyle}   ` +
       `  Needs Review: ${revStyle}`
     );
+    lines.push('');
+  }
+
+  if (sec) {
+    lines.push(pc.bold('SECURITY FINDINGS'));
+    let depStr = `${sec.dependencies}`;
+    if (sec.dependenciesSeverity) {
+      const parts: string[] = [];
+      if (sec.dependenciesSeverity.critical > 0) parts.push(`${sec.dependenciesSeverity.critical} CRITICAL`);
+      if (sec.dependenciesSeverity.high > 0) parts.push(`${sec.dependenciesSeverity.high} HIGH`);
+      if (sec.dependenciesSeverity.medium > 0) parts.push(`${sec.dependenciesSeverity.medium} MEDIUM`);
+      if (sec.dependenciesSeverity.low > 0) parts.push(`${sec.dependenciesSeverity.low} LOW`);
+      if (parts.length > 0) depStr += ` (${parts.join(', ')})`;
+    }
+
+    lines.push(`  Dependency Vulnerabilities: ${pc.bold(depStr)}`);
+    lines.push(`  Permission Issues:          ${pc.bold(sec.permissions.toString())}`);
+    lines.push(`  Secrets & Exposed Keys:     ${pc.bold(sec.secrets.toString())}`);
+    lines.push(`  SAST Code Vulnerabilities:  ${pc.bold(sec.sast.toString())}`);
+    lines.push(`  Security Configuration:     ${pc.bold(sec.configuration.toString())}`);
     lines.push('');
   }
 
@@ -90,6 +112,15 @@ export function renderTerminalReport(result: ScanResult, verbose = false): strin
     `Risk Score: ${scoreColor(pc.bold(`${result.riskScore.score}/100`))} ` +
       `[Grade: ${scoreColor(pc.bold(result.riskScore.grade))}] - ${pc.dim(result.riskScore.explanation)}`
   );
+
+  if (result.riskScore.contributors) {
+    const c = result.riskScore.contributors;
+    lines.push(
+      pc.dim(
+        `  (Contributors: Dependencies: ${c.dependencies}, Malware: ${c.malware}, Secrets: ${c.secrets}, SAST: ${c.sast}, Config: ${c.configuration}, Perms: ${c.permissions})`
+      )
+    );
+  }
   lines.push('');
 
   lines.push(

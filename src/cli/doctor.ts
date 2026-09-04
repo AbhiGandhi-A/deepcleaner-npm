@@ -3,6 +3,7 @@ import { detectDockerRuntime } from '../sandbox/detector.js';
 import { isExecutableAvailable } from '../utils/process.js';
 import { GroqClient } from '../ai/groq.js';
 import { testMongoConnection } from '../storage/mongodb.js';
+import { loadEnv } from '../utils/env.js';
 
 export interface DoctorCheck {
   category: string;
@@ -12,6 +13,7 @@ export interface DoctorCheck {
 }
 
 export async function runDoctor(): Promise<DoctorCheck[]> {
+  loadEnv();
   const checks: DoctorCheck[] = [];
 
   // 1. Node.js version

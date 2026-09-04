@@ -68,22 +68,27 @@ export function classifyFinding(finding: {
   metadata?: Record<string, unknown>;
 }): import('../models/finding.js').FindingClassification {
   const isMalware = finding.category === 'Malware' || finding.category === 'Malware Indicator';
+  const isSuspiciousCategory = finding.category === 'Suspicious';
   const hasChain = (finding.evidenceChain && finding.evidenceChain.length >= 2) ||
                    (finding.behaviorCategories && finding.behaviorCategories.length >= 2);
-  const isSignatureOrHash = finding.id?.includes('MAL-001') || finding.metadata?.threatIntelMatch;
+  const isSignatureOrHash = (finding.id?.includes('MAL-001') || finding.id?.includes('MAL-006')) && finding.metadata?.threatIntelMatch;
 
-  if (isSignatureOrHash || (isMalware && hasChain && finding.confidence >= 95)) {
+  // 1. Confirmed Malware
+  if (isSignatureOrHash || (isMalware && (hasChain || finding.id?.includes('MAL-CHAIN') || finding.id === 'DC-MAL-003') && finding.confidence >= 95)) {
     return 'confirmed_malware';
   }
 
-  if ((isMalware || finding.category === 'Suspicious') && (hasChain || finding.confidence >= 80)) {
+  // 2. Potentially Malicious
+  if ((isMalware || isSuspiciousCategory) && (hasChain || finding.confidence >= 80)) {
     return 'potentially_malicious';
   }
 
-  if (finding.confidence >= 60 || isMalware || finding.category === 'Suspicious') {
+  // 3. Suspicious Malware Indicators
+  if (isMalware || isSuspiciousCategory) {
     return 'suspicious';
   }
 
+  // 4. General Security / Vulnerabilities / Permissions / Secrets
   if (finding.confidence >= 20) {
     return 'needs_review';
   }

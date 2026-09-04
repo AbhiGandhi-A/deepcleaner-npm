@@ -46,7 +46,15 @@ export function calculateClassifications(findings: Finding[]): import('../models
   let clean = 0;
 
   for (const f of findings) {
-    const cls = f.classification || 'needs_review';
+    const isMalwareCategory = f.category === 'Malware' || f.category === 'Malware Indicator' || f.category === 'Suspicious';
+    const cls = f.classification || (isMalwareCategory ? 'suspicious' : 'needs_review');
+
+    if (!isMalwareCategory) {
+      if (cls === 'clean') clean++;
+      else needsReview++;
+      continue;
+    }
+
     switch (cls) {
       case 'confirmed_malware':
         confirmedMalware++;
@@ -75,6 +83,50 @@ export function calculateClassifications(findings: Finding[]): import('../models
   };
 }
 
+export function calculateSecurityFindings(findings: Finding[]): import('../models/scan-result.js').SecurityFindingsSummary {
+  let dependencies = 0;
+  let configuration = 0;
+  let permissions = 0;
+  let secrets = 0;
+  let sast = 0;
+
+  const depSev = { critical: 0, high: 0, medium: 0, low: 0 };
+
+  for (const f of findings) {
+    switch (f.category) {
+      case 'Dependencies':
+        dependencies++;
+        if (f.severity === 'CRITICAL') depSev.critical++;
+        else if (f.severity === 'HIGH') depSev.high++;
+        else if (f.severity === 'MEDIUM') depSev.medium++;
+        else if (f.severity === 'LOW') depSev.low++;
+        break;
+      case 'Configuration':
+        configuration++;
+        break;
+      case 'Permissions':
+        permissions++;
+        break;
+      case 'Secrets':
+      case 'Git History':
+        secrets++;
+        break;
+      case 'Security':
+        sast++;
+        break;
+    }
+  }
+
+  return {
+    dependencies,
+    configuration,
+    permissions,
+    secrets,
+    sast,
+    dependenciesSeverity: depSev
+  };
+}
+
 export function calculateRiskScore(findings: Finding[]): RiskScoreDetails {
   const seenKeys = new Set<string>();
   const deduplicated: Finding[] = [];
@@ -94,8 +146,29 @@ export function calculateRiskScore(findings: Finding[]): RiskScoreDetails {
 
   let rawScore = 0;
 
+  let malwareCount = 0;
+  let depCount = 0;
+  let secretCount = 0;
+  let sastCount = 0;
+  let configCount = 0;
+  let permCount = 0;
+
   for (const f of deduplicated) {
     const confFactor = Math.max(0.3, f.confidence / 100);
+
+    if (f.category === 'Malware' || f.category === 'Malware Indicator' || f.category === 'Suspicious') {
+      malwareCount++;
+    } else if (f.category === 'Dependencies') {
+      depCount++;
+    } else if (f.category === 'Secrets' || f.category === 'Git History') {
+      secretCount++;
+    } else if (f.category === 'Security') {
+      sastCount++;
+    } else if (f.category === 'Configuration') {
+      configCount++;
+    } else if (f.category === 'Permissions') {
+      permCount++;
+    }
 
     switch (f.severity) {
       case 'CRITICAL':
@@ -144,6 +217,14 @@ export function calculateRiskScore(findings: Finding[]): RiskScoreDetails {
     score,
     grade,
     explanation: explanations.join('; ') || 'Minimal risk posture',
+    contributors: {
+      dependencies: `${depCount}`,
+      malware: `${malwareCount}`,
+      secrets: `${secretCount}`,
+      sast: `${sastCount}`,
+      configuration: `${configCount}`,
+      permissions: `${permCount}`
+    },
     impacts: {
       criticalCount,
       highCount,

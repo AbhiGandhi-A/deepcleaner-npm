@@ -158,7 +158,7 @@ export class ScanEngine {
 
     // Auto-classify findings based on confidence and behavioral evidence
     const { classifyFinding } = await import('../scoring/confidence.js');
-    const { calculateClassifications } = await import('../scoring/risk-score.js');
+    const { calculateClassifications, calculateSecurityFindings } = await import('../scoring/risk-score.js');
 
     for (const f of allFindings) {
       if (!f.classification) {
@@ -169,6 +169,7 @@ export class ScanEngine {
     const summary = calculateSummary(allFindings);
     const riskScore = calculateRiskScore(allFindings);
     const classifications = calculateClassifications(allFindings);
+    const securityFindings = calculateSecurityFindings(allFindings);
 
     const hiddenFilesCount = files.filter((f) => path.basename(f.relativePath).startsWith('.')).length;
     const archivesInspected = files.filter((f) => f.isArchive).length;
@@ -179,7 +180,7 @@ export class ScanEngine {
     const scanResult: ScanResult = {
       tool: {
         name: 'deepcleaner-ag',
-        version: '1.0.2',
+        version: '1.0.3',
         homepage: 'https://github.com/AbhiGandhi-A/deepcleaner-npm#readme'
       },
       target: {
@@ -192,6 +193,7 @@ export class ScanEngine {
       riskScore,
       summary,
       classifications,
+      securityFindings,
       metrics: {
         filesScanned: files.length,
         filesSkipped: 0,

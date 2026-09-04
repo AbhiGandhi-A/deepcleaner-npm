@@ -19,6 +19,15 @@ export interface ClassificationSummary {
   clean: number;
 }
 
+export interface SecurityFindingsSummary {
+  dependencies: number;
+  configuration: number;
+  permissions: number;
+  secrets: number;
+  sast: number;
+  dependenciesSeverity?: { critical: number; high: number; medium: number; low: number };
+}
+
 export interface MetricsSummary {
   filesScanned: number;
   filesSkipped: number;
@@ -29,10 +38,20 @@ export interface MetricsSummary {
   dependenciesAnalyzed: number;
 }
 
+export interface RiskContributors {
+  malware: string;
+  dependencies: string;
+  secrets: string;
+  sast: string;
+  configuration: string;
+  permissions: string;
+}
+
 export interface RiskScoreDetails {
   score: number;
   grade: 'A' | 'B' | 'C' | 'D' | 'F';
   explanation: string;
+  contributors?: RiskContributors;
   impacts: {
     criticalCount: number;
     highCount: number;
@@ -58,6 +77,7 @@ export interface ScanResult {
   riskScore: RiskScoreDetails;
   summary: SeveritySummary;
   classifications?: ClassificationSummary;
+  securityFindings?: SecurityFindingsSummary;
   metrics?: MetricsSummary;
   scanners: Record<string, ScannerResult>;
   findings: Finding[];

@@ -7,7 +7,7 @@ export function createCliProgram(): Command {
   program
     .name('deepcleaner')
     .description('Deep local security and malware-indicator scanner for software projects')
-    .version('1.0.2', '-v, --version', 'Output DeepCleaner version');
+    .version('1.0.3', '-v, --version', 'Output DeepCleaner version');
 
   // Doctor command
   program

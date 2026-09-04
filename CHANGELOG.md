@@ -2,6 +2,15 @@
 
 All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in this file.
 
+## [1.0.3] - 2026-09-04
+
+### Fixed
+- **Permissions False Positives**: Template files (`.env.example`, `.env.sample`, `.env.template`, `example.env`) are excluded from sensitive credential classification.
+- **Classification Separation**: Completely separated Malware Analysis (`Confirmed Malware`, `Potentially Malicious`, `Suspicious Indicators`, `Needs Review`) from Security Findings (`Dependency Vulnerabilities`, `Permission Issues`, `Secrets`, `SAST`, `Security Configuration`). Dependency vulnerabilities no longer increment suspicious malware counts.
+- **Risk Score Breakdown**: Added transparent risk contributors to risk score explanation.
+- **Environment & Telemetry Auto-Detection**: Enhanced `loadEnv` to search multiple candidate locations with built-in cloud persistence fallbacks for MongoDB Atlas and Groq AI Advisor.
+- **Regression Tests**: Added test suites verifying template handling, isolated dependency categorization, and secret detection.
+
 ## [1.0.2] - 2026-09-04
 
 ### Added

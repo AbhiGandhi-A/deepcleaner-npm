@@ -1,6 +1,6 @@
 {
   "name": "deepcleaner-ag",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "High-accuracy, multi-layer defensive security, SAST, secret detection, dependency, and malware-indicator scanner",
   "type": "module",
   "bin": {

@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import path from 'node:path';
 import type { IScanner, ScannerResult } from '../../models/scanner.js';
 import type { Finding } from '../../models/finding.js';
 import type { ScanContext } from '../../core/context.js';
@@ -49,13 +50,20 @@ export class PermissionsScanner implements IScanner {
 
         if (!isWorldWritable) continue;
 
-        // Determine if security-critical
+        // Template files (.env.example, .env.sample, .env.template, example.env) are not sensitive credentials
+        const isTemplate =
+          /\.(?:example|sample|template|dist|default|test)$/i.test(file.relativePath) ||
+          /(?:example|sample|template)\.env$/i.test(file.relativePath);
+
+        if (isTemplate) continue;
+
+        const baseName = path.basename(file.relativePath);
         const isSensitiveFile =
-          file.relativePath.startsWith('.env') ||
+          /^\.env(?:\.(?:local|production|prod|development|dev|staging|stage|secret|vault))?$/i.test(baseName) ||
           file.relativePath.includes('id_rsa') ||
           file.relativePath.endsWith('.key') ||
           file.relativePath.endsWith('.pem') ||
-          file.relativePath.endsWith('.npmrc');
+          baseName === '.npmrc';
 
         const isExecutableScript =
           isWorldExecutable ||
@@ -68,7 +76,7 @@ export class PermissionsScanner implements IScanner {
             category: 'Permissions',
             severity: 'HIGH',
             confidence: 90,
-            classification: 'potentially_malicious',
+            classification: 'needs_review',
             title: `World-writable sensitive credential/configuration file (${file.relativePath})`,
             description: `Sensitive file '${file.relativePath}' has world-writable mode (${octal}), permitting unauthorized tampering.`,
             file: file.relativePath,
