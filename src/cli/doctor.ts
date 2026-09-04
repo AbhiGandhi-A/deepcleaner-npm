@@ -80,12 +80,20 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
       status: 'ok',
       message: `Available (v${dockerInfo.version})`
     });
+  } else if (dockerInfo.available && !dockerInfo.isDaemonRunning) {
+    checks.push({
+      category: 'Optional Integrations',
+      name: 'Docker Dynamic Sandbox',
+      status: 'optional_missing',
+      message: 'Optional (Docker installed but daemon is stopped; start with systemctl start docker)'
+    });
   } else {
     checks.push({
       category: 'Optional Integrations',
       name: 'Docker Dynamic Sandbox',
       status: 'optional_missing',
       message: 'Unavailable (Docker daemon not running; static analysis fully operational)'
+      message: 'Optional (Docker not installed; static analysis fully operational)'
     });
   }
 
@@ -103,6 +111,7 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
       name: 'YARA Pattern Engine',
       status: 'optional_missing',
       message: 'Unavailable (yara not in PATH; built-in pattern detection active)'
+      message: 'Optional (yara not in PATH; built-in AST & pattern detection active)'
     });
   }
 
@@ -120,6 +129,7 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
       name: 'ClamAV Antivirus Engine',
       status: 'optional_missing',
       message: 'Unavailable (clamscan not in PATH; static heuristics active)'
+      message: 'Optional (clamscan not in PATH; static heuristics active)'
     });
   }
 
@@ -202,6 +212,7 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
         name: 'MongoDB Database Storage',
         status: 'optional_missing',
         message: isConfigured ? `Configured but unreachable: ${mongoCheck.message}` : 'Not configured (Set MONGODB_URI to auto-save scan records)'
+        message: isConfigured ? `Configured but unreachable: ${mongoCheck.message}` : 'Not configured (Set MONGODB_URL or MONGODB_URI in .env to auto-save scan records)'
       });
     }
   } catch (err: any) {

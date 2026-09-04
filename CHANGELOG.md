@@ -2,6 +2,12 @@
 
 All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in this file.
 
+## [1.0.6] - 2026-09-04
+
+### Improved
+- **Storage Diagnostics & Config Guidance**: Clearly indicate `MONGODB_URL` and `MONGODB_URI` environment variable support in `doctor` output and scan results.
+- **Optional Integration Clarity**: Clarified optional integration messaging in `deepcleaner doctor` for Docker sandbox, YARA, and ClamAV with setup guidance.
+
 ## [1.0.5] - 2026-09-04
 
 ### Fixed

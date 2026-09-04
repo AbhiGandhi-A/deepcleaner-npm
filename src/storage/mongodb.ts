@@ -46,6 +46,7 @@ export async function saveScanResultToMongo(
     return {
       success: false,
       error: 'MongoDB URI is not provided or set in MONGODB_URI environment variable.'
+      error: 'MongoDB connection string is not provided. Set MONGODB_URL or MONGODB_URI in .env or pass --mongo <uri>.'
     };
   }
 
