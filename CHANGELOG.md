@@ -21,3 +21,4 @@ All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in 
 
 ### Added
 - Initial public release with 11 core scanners, OSV dependency intelligence, Babel SAST, Groq AI advisory, and MongoDB telemetry persistence.
+
