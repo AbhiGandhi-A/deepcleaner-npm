@@ -180,7 +180,6 @@ export class ScanEngine {
     const scanResult: ScanResult = {
       tool: {
         name: 'deepcleaner-ag',
-        version: '1.0.6',
         version: '1.0.7',
         homepage: 'https://github.com/AbhiGandhi-A/deepcleaner-npm#readme'
       },
