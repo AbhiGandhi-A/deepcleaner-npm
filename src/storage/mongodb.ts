@@ -1,5 +1,6 @@
 import { MongoClient } from 'mongodb';
 import type { ScanResult } from '../models/scan-result.js';
+import { loadEnv } from '../utils/env.js';
 
 export interface MongoSaveResult {
   success: boolean;
@@ -9,11 +10,23 @@ export interface MongoSaveResult {
   error?: string;
 }
 
+export function getMongoUri(uri?: string): string | undefined {
+  if (uri !== undefined) return uri;
+  loadEnv();
+  return (
+    process.env.MONGODB_URI ||
+    process.env.MONGO_URI ||
+    process.env.MONGODB_URL ||
+    process.env.MONGO_URL ||
+    process.env.DATABASE_URL
+  );
+}
+
 export async function saveScanResultToMongo(
   result: ScanResult,
   uri?: string
 ): Promise<MongoSaveResult> {
-  const mongoUri = uri || process.env.MONGODB_URI;
+  const mongoUri = getMongoUri(uri);
 
   if (!mongoUri) {
     return {
@@ -59,7 +72,7 @@ export async function saveScanResultToMongo(
 }
 
 export async function testMongoConnection(uri?: string): Promise<{ connected: boolean; message: string; version?: string }> {
-  const mongoUri = uri || process.env.MONGODB_URI;
+  const mongoUri = getMongoUri(uri);
   if (!mongoUri) {
     return { connected: false, message: 'MONGODB_URI is not configured' };
   }

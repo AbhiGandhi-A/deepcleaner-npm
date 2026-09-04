@@ -1,5 +1,6 @@
 import { APPSEC_SYSTEM_PROMPT, createFindingAnalysisPrompt } from './prompts.js';
 import type { SanitizedFindingContext } from './redaction.js';
+import { loadEnv } from '../utils/env.js';
 
 export interface GroqAnalysisResult {
   verdict: 'confirmed' | 'likely' | 'suspicious' | 'false_positive' | 'unknown';
@@ -16,7 +17,15 @@ export class GroqClient {
   private model: string;
 
   constructor(apiKey?: string, model = 'llama-3.3-70b-versatile') {
-    this.apiKey = apiKey || process.env.GROQ_API_KEY;
+    if (apiKey !== undefined) {
+      this.apiKey = apiKey;
+    } else {
+      this.apiKey =
+        process.env.GROQ_API_KEY ||
+        process.env.GROQ_KEY ||
+        process.env.GROQ_APIKEY ||
+        process.env.GROQ_TOKEN;
+    }
     this.model = model;
   }
 
