@@ -7,20 +7,8 @@ export function createCliProgram(): Command {
   program
     .name('deepcleaner')
     .description('Deep local security and malware-indicator scanner for software projects')
-    .version('1.0.3', '-v, --version', 'Output DeepCleaner version');
-
-  // Doctor command
-  program
-    .command('doctor')
-    .description('Run system readiness diagnostic and check engine availability')
-    .action(async () => {
-      // Handled in entrypoint
-    });
-
-  // Scan command
-  program
-    .command('scan [target]', { isDefault: true })
-    .description('Scan target directory or project path (default command)')
+    .version('1.0.4', '-v, --version', 'Output DeepCleaner version')
+    .usage('[options] [target]')
     .option('--deep', 'Perform deep recursive scanning including Git commit history')
     .option('--security', 'Focus on SAST code security vulnerabilities')
     .option('--malware', 'Focus on malware indicators and suspicious code')
@@ -49,6 +37,21 @@ export function createCliProgram(): Command {
     .option('--verbose', 'Show verbose diagnostic logging')
     .option('--quiet', 'Suppress non-error terminal output');
 
+  // Doctor command
+  program
+    .command('doctor')
+    .description('Run system readiness diagnostic and check engine availability')
+    .action(async () => {
+      // Handled in entrypoint
+    });
+
+  // Scan command
+  program
+    .command('scan [target]', { isDefault: true })
+    .description('Scan target directory or project path (default command)')
+    .allowUnknownOption(true)
+    .action(async () => {});
+
   return program;
 }
 
@@ -59,7 +62,18 @@ export function parseCliOptions(program: Command, argv: string[] = process.argv)
     return { command: 'doctor', target: '.', options: { target: '.' } };
   }
 
-  program.parse(argv);
+  // Normalize argv for Commander if target is passed directly without 'scan'
+  const normalizedArgv = [...argv];
+  const knownSubcommands = ['doctor', 'scan', 'help'];
+  const firstNonOptIdx = normalizedArgv.slice(2).findIndex((a) => !a.startsWith('-'));
+  if (firstNonOptIdx >= 0) {
+    const candidate = normalizedArgv[2 + firstNonOptIdx];
+    if (!knownSubcommands.includes(candidate)) {
+      normalizedArgv.splice(2 + firstNonOptIdx, 0, 'scan');
+    }
+  }
+
+  program.parse(normalizedArgv);
   const rawOpts = program.opts();
 
   // Handle options when subcommands are used or default command

@@ -2,6 +2,11 @@
 
 All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in this file.
 
+## [1.0.4] - 2026-09-04
+
+### Improved
+- **CLI Help Output**: Configured global command help so `deepcleaner --help` immediately displays all available CLI flags, subcommands (`scan`, `doctor`), and scan options.
+
 ## [1.0.3] - 2026-09-04
 
 ### Fixed
