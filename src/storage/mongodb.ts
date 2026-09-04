@@ -11,16 +11,29 @@ export interface MongoSaveResult {
 }
 
 export function getMongoUri(uri?: string): string | undefined {
-  if (uri !== undefined) return uri.trim() || undefined;
+  if (uri !== undefined) {
+    const trimmed = uri.trim();
+    return trimmed || undefined;
+  }
   loadEnv();
   const found =
     process.env.MONGODB_URI ||
     process.env.MONGO_URI ||
     process.env.MONGODB_URL ||
-    process.env.MONGO_URL ||
-    process.env.DATABASE_URL;
+    process.env.MONGO_URL;
 
-  return found ? found.trim() : undefined;
+  if (found && found.trim()) {
+    return found.trim();
+  }
+
+  if (process.env.DATABASE_URL) {
+    const dbUrl = process.env.DATABASE_URL.trim();
+    if (dbUrl.startsWith('mongodb://') || dbUrl.startsWith('mongodb+srv://')) {
+      return dbUrl;
+    }
+  }
+
+  return undefined;
 }
 
 export async function saveScanResultToMongo(

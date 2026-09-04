@@ -150,7 +150,9 @@ export function loadEnv(targetDir: string = process.cwd()): void {
 
             // Normalize known aliases
             const upper = key.toUpperCase();
-            if (['MONGODB_URI', 'MONGO_URI', 'MONGODB_URL', 'MONGO_URL', 'DATABASE_URL'].includes(upper)) {
+            if (['MONGODB_URI', 'MONGO_URI', 'MONGODB_URL', 'MONGO_URL'].includes(upper)) {
+              if (!process.env.MONGODB_URI) process.env.MONGODB_URI = val;
+            } else if (upper === 'DATABASE_URL' && (val.startsWith('mongodb://') || val.startsWith('mongodb+srv://'))) {
               if (!process.env.MONGODB_URI) process.env.MONGODB_URI = val;
             }
             if (['GROQ_API_KEY', 'GROQ_KEY', 'GROQ_APIKEY', 'GROQ_TOKEN'].includes(upper)) {
@@ -166,11 +168,15 @@ export function loadEnv(targetDir: string = process.cwd()): void {
 
   // Also bind aliases from existing process.env
   if (!process.env.MONGODB_URI) {
-    process.env.MONGODB_URI =
+    const candidate =
       process.env.MONGO_URI ||
       process.env.MONGODB_URL ||
-      process.env.MONGO_URL ||
-      process.env.DATABASE_URL;
+      process.env.MONGO_URL;
+    if (candidate) {
+      process.env.MONGODB_URI = candidate;
+    } else if (process.env.DATABASE_URL && (process.env.DATABASE_URL.startsWith('mongodb://') || process.env.DATABASE_URL.startsWith('mongodb+srv://'))) {
+      process.env.MONGODB_URI = process.env.DATABASE_URL;
+    }
   }
   if (!process.env.GROQ_API_KEY) {
     process.env.GROQ_API_KEY =
