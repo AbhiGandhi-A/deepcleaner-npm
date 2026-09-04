@@ -11,15 +11,16 @@ export interface MongoSaveResult {
 }
 
 export function getMongoUri(uri?: string): string | undefined {
-  if (uri !== undefined) return uri;
+  if (uri !== undefined) return uri.trim() || undefined;
   loadEnv();
-  return (
+  const found =
     process.env.MONGODB_URI ||
     process.env.MONGO_URI ||
     process.env.MONGODB_URL ||
     process.env.MONGO_URL ||
-    process.env.DATABASE_URL
-  );
+    process.env.DATABASE_URL;
+
+  return found ? found.trim() : undefined;
 }
 
 export async function saveScanResultToMongo(
@@ -35,12 +36,20 @@ export async function saveScanResultToMongo(
     };
   }
 
-  const client = new MongoClient(mongoUri, {
-    serverSelectionTimeoutMS: 8000,
-    connectTimeoutMS: 8000
-  });
+  if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+    return {
+      success: false,
+      error: 'Invalid MongoDB connection scheme: must start with mongodb:// or mongodb+srv://'
+    };
+  }
 
+  let client: MongoClient | undefined;
   try {
+    client = new MongoClient(mongoUri, {
+      serverSelectionTimeoutMS: 8000,
+      connectTimeoutMS: 8000
+    });
+
     await client.connect();
     const db = client.db('deepcleaner');
     const collection = db.collection('scans');
@@ -63,10 +72,12 @@ export async function saveScanResultToMongo(
       error: err?.message || String(err)
     };
   } finally {
-    try {
-      await client.close();
-    } catch {
-      // ignore
+    if (client) {
+      try {
+        await client.close();
+      } catch {
+        // ignore
+      }
     }
   }
 }
@@ -77,15 +88,23 @@ export async function testMongoConnection(uri?: string): Promise<{ connected: bo
     return { connected: false, message: 'MONGODB_URI is not configured' };
   }
 
-  const client = new MongoClient(mongoUri, {
-    serverSelectionTimeoutMS: 5000,
-    connectTimeoutMS: 5000
-  });
+  if (!mongoUri.startsWith('mongodb://') && !mongoUri.startsWith('mongodb+srv://')) {
+    return {
+      connected: false,
+      message: 'Invalid MongoDB connection scheme: must start with mongodb:// or mongodb+srv://'
+    };
+  }
 
+  let client: MongoClient | undefined;
   try {
+    client = new MongoClient(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+      connectTimeoutMS: 5000
+    });
+
     await client.connect();
     const admin = client.db('admin');
-    const info = await admin.command({ ping: 1 });
+    await admin.command({ ping: 1 });
     return {
       connected: true,
       message: 'MongoDB database connected successfully'
@@ -96,11 +115,12 @@ export async function testMongoConnection(uri?: string): Promise<{ connected: bo
       message: err?.message || String(err)
     };
   } finally {
-    try {
-      await client.close();
-    } catch {
-      // ignore
+    if (client) {
+      try {
+        await client.close();
+      } catch {
+        // ignore
+      }
     }
   }
 }
-

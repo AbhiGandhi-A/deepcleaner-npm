@@ -159,38 +159,56 @@ export async function runDoctor(): Promise<DoctorCheck[]> {
   }
 
   // 5. AI Advisory Layer
-  const groq = new GroqClient();
-  if (groq.isConfigured()) {
+  try {
+    const groq = new GroqClient();
+    if (groq.isConfigured()) {
+      checks.push({
+        category: 'AI Advisory Layer',
+        name: 'Groq AI Advisor',
+        status: 'ok',
+        message: 'Configured (GROQ_API_KEY detected)'
+      });
+    } else {
+      checks.push({
+        category: 'AI Advisory Layer',
+        name: 'Groq AI Advisor',
+        status: 'optional_missing',
+        message: 'Not configured (Set GROQ_API_KEY in environment or .env for --ai advisory)'
+      });
+    }
+  } catch (err: any) {
     checks.push({
       category: 'AI Advisory Layer',
       name: 'Groq AI Advisor',
-      status: 'ok',
-      message: 'Configured (GROQ_API_KEY detected)'
-    });
-  } else {
-    checks.push({
-      category: 'AI Advisory Layer',
-      name: 'Groq AI Advisor',
-      status: 'optional_missing',
-      message: 'Not configured (Set GROQ_API_KEY in environment or .env for --ai advisory)'
+      status: 'warning',
+      message: `Configuration check error: ${err?.message || String(err)}`
     });
   }
 
   // 6. MongoDB Database Storage
-  const mongoCheck = await testMongoConnection();
-  if (mongoCheck.connected) {
-    checks.push({
-      category: 'Database & Storage',
-      name: 'MongoDB Database Storage',
-      status: 'ok',
-      message: 'Connected (DeepCleaner scan repository active)'
-    });
-  } else {
+  try {
+    const mongoCheck = await testMongoConnection();
+    if (mongoCheck.connected) {
+      checks.push({
+        category: 'Database & Storage',
+        name: 'MongoDB Database Storage',
+        status: 'ok',
+        message: 'Connected (DeepCleaner scan repository active)'
+      });
+    } else {
+      checks.push({
+        category: 'Database & Storage',
+        name: 'MongoDB Database Storage',
+        status: 'optional_missing',
+        message: process.env.MONGODB_URI ? `Configured but unreachable: ${mongoCheck.message}` : 'Not configured (Set MONGODB_URI to auto-save scan records)'
+      });
+    }
+  } catch (err: any) {
     checks.push({
       category: 'Database & Storage',
       name: 'MongoDB Database Storage',
       status: 'optional_missing',
-      message: process.env.MONGODB_URI ? `Configured but unreachable: ${mongoCheck.message}` : 'Not configured (Set MONGODB_URI to auto-save scan records)'
+      message: `Unreachable: ${err?.message || String(err)}`
     });
   }
 
