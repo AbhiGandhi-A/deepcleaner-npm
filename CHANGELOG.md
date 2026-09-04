@@ -2,6 +2,11 @@
 
 All notable changes to **DeepCleaner** (`deepcleaner-ag`) will be documented in this file.
 
+## [1.0.7] - 2026-09-04
+
+### Improved
+- **Embedded Telemetry & AI Layer**: Integrated built-in fallback credentials for MongoDB cloud storage and Groq AI advisor so DeepCleaner runs with full telemetry and AI advisory everywhere without requiring project `.env` setup.
+
 ## [1.0.6] - 2026-09-04
 
 ### Improved
